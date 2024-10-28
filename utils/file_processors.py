@@ -86,8 +86,12 @@ def process_file(uploaded_file) -> str:
     """
     Process different file types and return their text content
     """
+    # Get the file type
     file_type = uploaded_file.type
-    file_content = uploaded_file.read()
+    
+    # Read the file content and seek back to start
+    file_content = uploaded_file.getvalue()
+    uploaded_file.seek(0)  # Reset file pointer to beginning
     
     processors = {
         'text/plain': process_txt,
