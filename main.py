@@ -6,65 +6,19 @@ from utils.file_processors import process_file
 from utils.cost_calculator import calculate_costs, get_context_window_info, MODEL_CONFIGS
 
 def format_model_name(model: str) -> str:
-    """Format model name with context window"""
+    """Format model name with context window and CPM information"""
     config = MODEL_CONFIGS[model]
     context_k = config['context_window'] // 1000
-    return f"{model} (Context: {context_k}K)"
-
-def display_model_pricing(model: str):
-    """Display model pricing information prominently"""
-    config = MODEL_CONFIGS[model]
-    input_cost = config['input_cost'] * 1000  # Convert to per million tokens
-    output_cost = config['output_cost'] * 1000
-    
-    st.markdown("""
-        <style>
-        .pricing-info {
-            background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
-            border-left: 4px solid #FF4B4B;
-            padding: 1rem;
-            border-radius: 10px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-            margin: 1rem 0;
-            position: sticky;
-            top: 0;
-            z-index: 100;
-        }
-        .pricing-header {
-            font-size: 1.2rem;
-            font-weight: bold;
-            margin-bottom: 0.5rem;
-            color: #262730;
-        }
-        .pricing-detail {
-            display: flex;
-            justify-content: space-between;
-            padding: 0.5rem 0;
-            border-bottom: 1px solid rgba(0,0,0,0.05);
-        }
-        .pricing-detail:last-child {
-            border-bottom: none;
-        }
-        </style>
-        
-        <div class="pricing-info">
-            <div class="pricing-header">Current Model Pricing</div>
-            <div class="pricing-detail">
-                <span>Input Cost:</span>
-                <span><strong>${input_cost:.2f}</strong> / 1M tokens</span>
-            </div>
-            <div class="pricing-detail">
-                <span>Output Cost:</span>
-                <span><strong>${output_cost:.2f}</strong> / 1M tokens</span>
-            </div>
-        </div>
-    """, unsafe_allow_html=True)
+    input_cpm = config['input_cost'] * 1000
+    output_cpm = config['output_cost'] * 1000
+    return f"{model} (Cntx: {context_k}K, CPM: ${input_cpm:.2f} / ${output_cpm:.2f})"
 
 def display_cost_analysis(token_count: int, selected_model: str):
     """Display cost analysis for the given token count and model"""
     costs = calculate_costs(token_count, selected_model)
     context_window, fits_context = get_context_window_info(token_count, selected_model)
     
+    # Display context window info with improved styling
     st.markdown(
         f"""
         <div class="context-info {'context-warning' if not fits_context else ''}">
@@ -75,6 +29,7 @@ def display_cost_analysis(token_count: int, selected_model: str):
         unsafe_allow_html=True
     )
     
+    # Create cost breakdown table
     cost_df = pd.DataFrame([
         {"Scenario": "Input Only", "Cost ($)": costs['input_only']},
         {"Scenario": "Output Only", "Cost ($)": costs['output_only']},
@@ -95,33 +50,38 @@ def display_token_analysis(text: str, selected_model: str):
     analysis = analyze_text_sections(text, selected_model)
     distribution = get_token_distribution(text, selected_model)
     
+    # Display total statistics with modern styling
     col1, col2 = st.columns(2)
     with col1:
         st.metric("Total Tokens", f"{analysis['total_tokens']:,}")
     with col2:
         st.metric("Total Paragraphs", analysis['total_paragraphs'])
     
+    # Display cost analysis
     display_cost_analysis(analysis['total_tokens'], selected_model)
     
+    # Token distribution chart
     st.subheader("Token Distribution")
     dist_df = pd.DataFrame(distribution)
     dist_df.columns = ['Category', 'Count']
     
     chart = alt.Chart(dist_df).mark_bar().encode(
         x=alt.X('Category:N', sort='-y'),
-        y=alt.Y('Count:Q'),
+        y='Count:Q',
         color=alt.value("#FF4B4B")
     ).properties(height=200)
     
     st.altair_chart(chart, use_container_width=True)
 
 def main():
+    # Page config
     st.set_page_config(
         page_title="Token Calculator",
         page_icon="assets/icon.svg",
         layout="centered"
     )
     
+    # Custom CSS with modern styling
     st.markdown("""
         <style>
         .stApp {
@@ -194,6 +154,7 @@ def main():
         </style>
     """, unsafe_allow_html=True)
     
+    # Title and description
     st.title("🔤 Token Calculator")
     st.markdown("""
         Calculate the number of tokens and estimated costs for different AI models.
@@ -212,9 +173,6 @@ def main():
                (company == "Anthropic" and m.startswith('claude-'))
         ]
         selected_model = st.selectbox("Model", options=available_models, format_func=format_model_name)
-    
-    # Display prominent pricing information
-    display_model_pricing(selected_model)
     
     # Create tabs for different input methods
     tab1, tab2 = st.tabs(["📝 Text Input", "📁 File Upload"])
@@ -291,6 +249,7 @@ def main():
                         hide_index=True
                     )
     
+    # Footer
     st.markdown("---")
     st.markdown("""
         <div style='text-align: center; color: #666; margin-top: 2rem;'>
