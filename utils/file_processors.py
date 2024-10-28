@@ -42,12 +42,16 @@ def process_csv(file_content: bytes) -> str:
         raise Exception(f"Error processing CSV: {str(e)}")
 
 def process_xlsx(file_content: bytes) -> str:
-    """Process XLSX files."""
+    """Process XLSX files - handles multiple sheets."""
     try:
-        df = pd.read_excel(BytesIO(file_content))
-        return df.to_string()
+        excel_file = pd.ExcelFile(BytesIO(file_content))
+        all_sheets = []
+        for sheet_name in excel_file.sheet_names:
+            df = pd.read_excel(excel_file, sheet_name=sheet_name)
+            all_sheets.append(f'Sheet: {sheet_name}\n{df.to_string()}')
+        return '\n\n'.join(all_sheets)
     except Exception as e:
-        raise Exception(f"Error processing XLSX: {str(e)}")
+        raise Exception(f'Error processing XLSX: {str(e)}')
 
 def process_rtf(file_content: bytes) -> str:
     """Process RTF files."""

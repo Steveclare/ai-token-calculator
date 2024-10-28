@@ -1,0 +1,26 @@
+
+🔤 Token Calculator
+Calculate the number of tokens in your text or documents. Support for TXT, PDF, DOCX, CSV, XLSX, RTF, EPUB, JSON, and YAML files.
+
+
+📝 Text Input
+
+
+📁 File Upload
+
+Choose files
+
+Drag and drop files here
+Limit 200MB per file • TXT, PDF, DOCX, CSV, XLSX, RTF, EPUB, JSON, YAML, YML
+Stipe_Miocic__FNv4.1_dossier.xlsx
+33.8KB
+Total Tokens: 419
+File Summary
+File Contents
+View Stipe_Miocic__FNv4.1_dossier.xlsx
+
+Extracted Text
+
+           Name        Division Title Division Record Striking accuracy  Sig. Strikes Landed  Sig. Strikes Attempted Takedown Accuracy  Takedowns Landed  Takedowns Attempted  Sig. Str. Landed Per Min  Sig. Str. Absorbed Per Min  Takedown avg Per 15 Min  Submission avg Per 15 Min Sig. Str. Defense Takedown Defense  Knockdown Avg Average fight time Sig. Str. By Position - Standing Sig. Str. By Position - Clinch Sig. Str. By Position - Ground Win by Method - KO/TKO Win by Method - DEC Win by Method - SUB Sig. Str. by target - Head Strike Percentage  Sig. Str. by target - Head Strike Count Sig. Str. by target - Body Strike Percentage  Sig. Str. by target - Body Strike Count Sig. Str. by target - Leg Strike Percentage  Sig. Str. by target - Leg Strike Count  Status         Place_of_Birth  Fighting_style  Age  Height  Weight Octagon_Debut  Reach  Leg_reach               Trains_at  Fight Win Streak  Title Defenses  Former Champion
+0  Stipe Miocic  Heavyweight Division  20-4-0 (W-L-D)               53%                  970                    1821               34%                24                   73                      4.82                        3.82                     1.86                          0               55%              68%           0.52              11:11                        689 (71%)                      117 (12%)                      164 (17%)               15 (75%)             5 (25%)              0 (0%)                                          74%                                      713                                          14%                                      132                                         13%                                     125  Active  Euclid, United States             NaN   42      77     234  Oct. 9, 2011     80         39  Strongstyle Fight Team               NaN               3              NaN
+Made with ❤️ using Streamlit
