@@ -1,44 +1,44 @@
 from typing import Dict, Tuple
 
 MODEL_CONFIGS = {
-    'claude-instant': {
-        'input_cost': 0.0008,  # per 1K tokens
-        'output_cost': 0.0024,  # per 1K tokens
-        'context_window': 200000
+    'gpt-4o': {
+        'input_cost': 0.0025,  # $2.50 per 1M tokens
+        'output_cost': 0.01,   # $10.00 per 1M tokens
+        'context_window': 128000
     },
-    'claude-2': {
-        'input_cost': 0.008,  # per 1K tokens
-        'output_cost': 0.024,  # per 1K tokens
-        'context_window': 200000
+    'gpt-4o-2024-08-06': {
+        'input_cost': 0.0025,
+        'output_cost': 0.01,
+        'context_window': 128000
     },
-    'claude-2.1': {
-        'input_cost': 0.008,  # per 1K tokens
-        'output_cost': 0.024,  # per 1K tokens
-        'context_window': 200000
+    'gpt-4o-2024-05-13': {
+        'input_cost': 0.005,
+        'output_cost': 0.015,
+        'context_window': 128000
     },
-    'claude-3-haiku': {
-        'input_cost': 0.00025,  # per 1K tokens
-        'output_cost': 0.00125,  # per 1K tokens
-        'context_window': 200000
+    'gpt-4o-mini': {
+        'input_cost': 0.00015,
+        'output_cost': 0.0006,
+        'context_window': 128000
     },
-    'claude-3-sonnet': {
-        'input_cost': 0.003,  # per 1K tokens
-        'output_cost': 0.015,  # per 1K tokens
-        'context_window': 200000
+    'gpt-4o-mini-2024-07-18': {
+        'input_cost': 0.00015,
+        'output_cost': 0.0006,
+        'context_window': 128000
     },
-    'claude-3-opus': {
-        'input_cost': 0.015,  # per 1K tokens
-        'output_cost': 0.075,  # per 1K tokens
-        'context_window': 200000
+    'o1-preview': {
+        'input_cost': 0.015,
+        'output_cost': 0.06,
+        'context_window': 128000
     },
-    'claude-3.5-sonnet': {
-        'input_cost': 0.003,  # per 1K tokens
-        'output_cost': 0.015,  # per 1K tokens
-        'context_window': 200000
+    'o1-mini': {
+        'input_cost': 0.003,
+        'output_cost': 0.012,
+        'context_window': 128000
     }
 }
 
-def calculate_costs(token_count: int, model: str = 'claude-3-sonnet') -> Dict[str, float]:
+def calculate_costs(token_count: int, model: str = 'gpt-4o') -> Dict[str, float]:
     """
     Calculate estimated costs for input and output tokens for different scenarios
     
@@ -64,7 +64,7 @@ def calculate_costs(token_count: int, model: str = 'claude-3-sonnet') -> Dict[st
     
     return costs
 
-def get_context_window_info(token_count: int, model: str = 'claude-3-sonnet') -> Tuple[int, bool]:
+def get_context_window_info(token_count: int, model: str = 'gpt-4o') -> Tuple[int, bool]:
     """
     Get information about context window for the given token count and model
     
