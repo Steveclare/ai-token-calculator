@@ -1,8 +1,14 @@
 import PyPDF2
 from docx import Document
 import pandas as pd
-from io import BytesIO
+from io import BytesIO, StringIO
 import streamlit as st
+import json
+import yaml
+from striprtf.striprtf import rtf_to_text
+import ebooklib
+from ebooklib import epub
+import html2text
 
 def process_txt(file_content: bytes) -> str:
     """Process text files."""
@@ -35,6 +41,47 @@ def process_csv(file_content: bytes) -> str:
     except Exception as e:
         raise Exception(f"Error processing CSV: {str(e)}")
 
+def process_rtf(file_content: bytes) -> str:
+    """Process RTF files."""
+    try:
+        rtf_text = file_content.decode('utf-8', errors='ignore')
+        return rtf_to_text(rtf_text)
+    except Exception as e:
+        raise Exception(f"Error processing RTF: {str(e)}")
+
+def process_epub(file_content: bytes) -> str:
+    """Process EPUB files."""
+    try:
+        book = epub.read_epub(BytesIO(file_content))
+        text = []
+        h = html2text.HTML2Text()
+        h.ignore_links = True
+        
+        for item in book.get_items():
+            if item.get_type() == ebooklib.ITEM_DOCUMENT:
+                content = item.get_content().decode('utf-8')
+                text.append(h.handle(content))
+        
+        return "\n".join(text)
+    except Exception as e:
+        raise Exception(f"Error processing EPUB: {str(e)}")
+
+def process_json(file_content: bytes) -> str:
+    """Process JSON files."""
+    try:
+        json_data = json.loads(file_content.decode('utf-8'))
+        return json.dumps(json_data, indent=2)
+    except Exception as e:
+        raise Exception(f"Error processing JSON: {str(e)}")
+
+def process_yaml(file_content: bytes) -> str:
+    """Process YAML files."""
+    try:
+        yaml_data = yaml.safe_load(file_content.decode('utf-8'))
+        return yaml.dump(yaml_data, sort_keys=False, allow_unicode=True)
+    except Exception as e:
+        raise Exception(f"Error processing YAML: {str(e)}")
+
 def process_file(uploaded_file) -> str:
     """
     Process different file types and return their text content
@@ -46,7 +93,12 @@ def process_file(uploaded_file) -> str:
         'text/plain': process_txt,
         'application/pdf': process_pdf,
         'application/vnd.openxmlformats-officedocument.wordprocessingml.document': process_docx,
-        'text/csv': process_csv
+        'text/csv': process_csv,
+        'application/rtf': process_rtf,
+        'application/epub+zip': process_epub,
+        'application/json': process_json,
+        'application/x-yaml': process_yaml,
+        'text/yaml': process_yaml
     }
     
     if file_type in processors:

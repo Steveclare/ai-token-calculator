@@ -31,7 +31,7 @@ def main():
     st.title("🔤 Token Calculator")
     st.markdown("""
         Calculate the number of tokens in your text or documents.
-        Support for TXT, PDF, DOCX, and CSV files.
+        Support for TXT, PDF, DOCX, CSV, RTF, EPUB, JSON, and YAML files.
     """)
     
     # Create tabs for different input methods
@@ -60,8 +60,8 @@ def main():
         # File upload
         uploaded_file = st.file_uploader(
             "Choose a file",
-            type=['txt', 'pdf', 'docx', 'csv'],
-            help="Supported formats: TXT, PDF, DOCX, CSV"
+            type=['txt', 'pdf', 'docx', 'csv', 'rtf', 'epub', 'json', 'yaml', 'yml'],
+            help="Supported formats: TXT, PDF, DOCX, CSV, RTF, EPUB, JSON, YAML"
         )
         
         if uploaded_file:
