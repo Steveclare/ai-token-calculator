@@ -3,11 +3,39 @@ import pandas as pd
 import altair as alt
 from utils.token_counter import count_tokens, analyze_text_sections, get_token_distribution
 from utils.file_processors import process_file
+from utils.cost_calculator import calculate_costs, get_context_window_info, MODEL_CONFIGS
 
-def display_token_analysis(text: str):
+def display_cost_analysis(token_count: int, selected_model: str):
+    """Display cost analysis for the given token count and model"""
+    costs = calculate_costs(token_count, selected_model)
+    context_window, fits_context = get_context_window_info(token_count, selected_model)
+    
+    # Display context window info
+    st.info(
+        f"Context Window: {context_window:,} tokens\n\n" +
+        ("✅ Text fits within context window" if fits_context else "⚠️ Text exceeds context window")
+    )
+    
+    # Create cost breakdown table
+    cost_df = pd.DataFrame([
+        {"Scenario": "Input Only", "Cost ($)": costs['input_only']},
+        {"Scenario": "Output Only", "Cost ($)": costs['output_only']},
+        {"Scenario": "Equal Input/Output", "Cost ($)": costs['input_output_equal']}
+    ])
+    
+    st.subheader("Estimated Costs")
+    st.dataframe(
+        cost_df,
+        column_config={
+            "Cost ($)": st.column_config.NumberColumn(format="$%.4f")
+        },
+        hide_index=True
+    )
+
+def display_token_analysis(text: str, selected_model: str):
     """Display simplified token analysis for the given text"""
-    analysis = analyze_text_sections(text)
-    distribution = get_token_distribution(text)
+    analysis = analyze_text_sections(text, selected_model)
+    distribution = get_token_distribution(text, selected_model)
     
     # Display total statistics
     col1, col2 = st.columns(2)
@@ -15,6 +43,9 @@ def display_token_analysis(text: str):
         st.metric("Total Tokens", f"{analysis['total_tokens']:,}")
     with col2:
         st.metric("Total Paragraphs", analysis['total_paragraphs'])
+    
+    # Display cost analysis
+    display_cost_analysis(analysis['total_tokens'], selected_model)
     
     # Token distribution chart
     st.subheader("Token Distribution")
@@ -62,9 +93,16 @@ def main():
     # Title and description
     st.title("🔤 Token Calculator")
     st.markdown("""
-        Calculate the number of tokens in your text or documents.
+        Calculate the number of tokens and estimated costs for different AI models.
         Support for TXT, PDF, DOCX, CSV, XLSX, RTF, EPUB, JSON, and YAML files.
     """)
+    
+    # Model selection
+    selected_model = st.selectbox(
+        "Select AI Model",
+        options=list(MODEL_CONFIGS.keys()),
+        format_func=lambda x: f"{x} (Context: {MODEL_CONFIGS[x]['context_window']:,} tokens)"
+    )
     
     # Create tabs for different input methods
     tab1, tab2 = st.tabs(["📝 Text Input", "📁 File Upload"])
@@ -79,7 +117,7 @@ def main():
         
         if text_input:
             try:
-                display_token_analysis(text_input)
+                display_token_analysis(text_input, selected_model)
             except Exception as e:
                 st.error(f"Error analyzing text: {str(e)}")
     
@@ -101,7 +139,7 @@ def main():
                     try:
                         # Process each file
                         text_content = process_file(uploaded_file)
-                        analysis = analyze_text_sections(text_content)
+                        analysis = analyze_text_sections(text_content, selected_model)
                         total_tokens += analysis['total_tokens']
                         
                         file_results.append({
@@ -117,12 +155,15 @@ def main():
                         st.error(f"Error processing {uploaded_file.name}: {str(e)}")
                 
                 if file_results:
-                    # Display total token count
+                    # Display total token count and cost analysis
                     st.markdown(f"""
                         <div class="token-count">
                             Total Tokens: {total_tokens:,}
                         </div>
                     """, unsafe_allow_html=True)
+                    
+                    # Display cost analysis for total tokens
+                    display_cost_analysis(total_tokens, selected_model)
                     
                     # Create a DataFrame for file summary
                     summary_df = pd.DataFrame([{
