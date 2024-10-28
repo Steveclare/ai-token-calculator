@@ -4,6 +4,7 @@ version = "0.1.0"
 description = "Add your description here"
 requires-python = ">=3.11"
 dependencies = [
+    "altair>=5.4.1",
     "ebooklib>=0.18",
     "html2text>=2024.2.26",
     "openpyxl>=3.1.5",

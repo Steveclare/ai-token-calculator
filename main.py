@@ -1,7 +1,51 @@
 import streamlit as st
-from utils.token_counter import count_tokens
-from utils.file_processors import process_file
 import pandas as pd
+import altair as alt
+from utils.token_counter import count_tokens, analyze_text_sections, get_token_distribution
+from utils.file_processors import process_file
+
+def display_token_analysis(text: str):
+    """Display detailed token analysis for the given text"""
+    analysis = analyze_text_sections(text)
+    distribution = get_token_distribution(text)
+    
+    # Display total statistics
+    col1, col2, col3 = st.columns(3)
+    with col1:
+        st.metric("Total Tokens", f"{analysis['total_tokens']:,}")
+    with col2:
+        st.metric("Total Paragraphs", analysis['total_paragraphs'])
+    with col3:
+        st.metric("Avg Tokens/Paragraph", f"{analysis['average_tokens_per_paragraph']:.1f}")
+    
+    # Token distribution chart
+    st.subheader("Token Distribution")
+    dist_df = pd.DataFrame(distribution, columns=['Category', 'Count'])
+    chart = alt.Chart(dist_df).mark_bar().encode(
+        x='Category',
+        y='Count',
+        color=alt.value("#FF4B4B")
+    ).properties(height=200)
+    st.altair_chart(chart, use_container_width=True)
+    
+    # Paragraph breakdown
+    st.subheader("Paragraph Analysis")
+    for para in analysis['paragraphs']:
+        with st.expander(f"Paragraph {para['paragraph_number']} ({para['total_tokens']} tokens)"):
+            st.text(para['text'])
+            
+            # Create sentence analysis table
+            sentences_df = pd.DataFrame([
+                {'Sentence': s['text'], 'Tokens': s['tokens']}
+                for s in para['sentences']
+            ])
+            st.dataframe(
+                sentences_df,
+                column_config={
+                    "Tokens": st.column_config.NumberColumn(format=",")
+                },
+                hide_index=True
+            )
 
 def main():
     # Page config
@@ -55,14 +99,9 @@ def main():
         
         if text_input:
             try:
-                token_count = count_tokens(text_input)
-                st.markdown(f"""
-                    <div class="token-count">
-                        Token Count: {token_count:,}
-                    </div>
-                """, unsafe_allow_html=True)
+                display_token_analysis(text_input)
             except Exception as e:
-                st.error(f"Error counting tokens: {str(e)}")
+                st.error(f"Error analyzing text: {str(e)}")
     
     with tab2:
         # Multiple file upload
@@ -82,14 +121,17 @@ def main():
                     try:
                         # Process each file
                         text_content = process_file(uploaded_file)
-                        token_count = count_tokens(text_content)
-                        total_tokens += token_count
+                        analysis = analyze_text_sections(text_content)
+                        total_tokens += analysis['total_tokens']
                         
                         file_results.append({
                             'File Name': uploaded_file.name,
                             'File Type': uploaded_file.type,
-                            'Token Count': token_count,
-                            'Content': text_content
+                            'Token Count': analysis['total_tokens'],
+                            'Paragraphs': analysis['total_paragraphs'],
+                            'Avg Tokens/Paragraph': analysis['average_tokens_per_paragraph'],
+                            'Content': text_content,
+                            'Analysis': analysis
                         })
                         
                     except Exception as e:
@@ -107,7 +149,9 @@ def main():
                     summary_df = pd.DataFrame([{
                         'File Name': result['File Name'],
                         'File Type': result['File Type'],
-                        'Token Count': result['Token Count']
+                        'Token Count': result['Token Count'],
+                        'Paragraphs': result['Paragraphs'],
+                        'Avg Tokens/Paragraph': result['Avg Tokens/Paragraph']
                     } for result in file_results])
                     
                     # Display file summary
@@ -115,20 +159,16 @@ def main():
                     st.dataframe(
                         summary_df,
                         column_config={
-                            "Token Count": st.column_config.NumberColumn(format=",")
+                            "Token Count": st.column_config.NumberColumn(format=","),
+                            "Avg Tokens/Paragraph": st.column_config.NumberColumn(format="%.1f")
                         }
                     )
                     
                     # File content expanders
-                    st.subheader("File Contents")
+                    st.subheader("File Analysis")
                     for result in file_results:
-                        with st.expander(f"View {result['File Name']}"):
-                            st.text_area(
-                                "Extracted Text",
-                                result['Content'],
-                                height=200,
-                                disabled=True
-                            )
+                        with st.expander(f"Analyze {result['File Name']}"):
+                            display_token_analysis(result['Content'])
     
     # Footer
     st.markdown("---")
