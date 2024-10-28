@@ -1,6 +1,7 @@
 import streamlit as st
 from utils.token_counter import count_tokens
 from utils.file_processors import process_file
+import pandas as pd
 
 def main():
     # Page config
@@ -23,6 +24,13 @@ def main():
             border-radius: 10px;
             background-color: #f0f2f6;
             text-align: center;
+        }
+        .file-summary {
+            font-size: 16px;
+            padding: 10px;
+            border-radius: 5px;
+            background-color: #f8f9fa;
+            margin: 5px 0;
         }
         </style>
     """, unsafe_allow_html=True)
@@ -57,37 +65,70 @@ def main():
                 st.error(f"Error counting tokens: {str(e)}")
     
     with tab2:
-        # File upload
-        uploaded_file = st.file_uploader(
-            "Choose a file",
+        # Multiple file upload
+        uploaded_files = st.file_uploader(
+            "Choose files",
             type=['txt', 'pdf', 'docx', 'csv', 'rtf', 'epub', 'json', 'yaml', 'yml'],
+            accept_multiple_files=True,
             help="Supported formats: TXT, PDF, DOCX, CSV, RTF, EPUB, JSON, YAML"
         )
         
-        if uploaded_file:
-            try:
-                with st.spinner('Processing file...'):
-                    # Process the file
-                    text_content = process_file(uploaded_file)
-                    token_count = count_tokens(text_content)
-                    
-                    # Display results
+        if uploaded_files:
+            total_tokens = 0
+            file_results = []
+            
+            with st.spinner('Processing files...'):
+                for uploaded_file in uploaded_files:
+                    try:
+                        # Process each file
+                        text_content = process_file(uploaded_file)
+                        token_count = count_tokens(text_content)
+                        total_tokens += token_count
+                        
+                        file_results.append({
+                            'File Name': uploaded_file.name,
+                            'File Type': uploaded_file.type,
+                            'Token Count': token_count,
+                            'Content': text_content
+                        })
+                        
+                    except Exception as e:
+                        st.error(f"Error processing {uploaded_file.name}: {str(e)}")
+                
+                if file_results:
+                    # Display total token count
                     st.markdown(f"""
                         <div class="token-count">
-                            Token Count: {token_count:,}
+                            Total Tokens: {total_tokens:,}
                         </div>
                     """, unsafe_allow_html=True)
                     
-                    with st.expander("View Extracted Text"):
-                        st.text_area(
-                            "Extracted Text",
-                            text_content,
-                            height=200,
-                            disabled=True
-                        )
-                        
-            except Exception as e:
-                st.error(f"Error processing file: {str(e)}")
+                    # Create a DataFrame for file summary
+                    summary_df = pd.DataFrame([{
+                        'File Name': result['File Name'],
+                        'File Type': result['File Type'],
+                        'Token Count': result['Token Count']
+                    } for result in file_results])
+                    
+                    # Display file summary
+                    st.subheader("File Summary")
+                    st.dataframe(
+                        summary_df,
+                        column_config={
+                            "Token Count": st.column_config.NumberColumn(format=",")
+                        }
+                    )
+                    
+                    # File content expanders
+                    st.subheader("File Contents")
+                    for result in file_results:
+                        with st.expander(f"View {result['File Name']}"):
+                            st.text_area(
+                                "Extracted Text",
+                                result['Content'],
+                                height=200,
+                                disabled=True
+                            )
     
     # Footer
     st.markdown("---")
