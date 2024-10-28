@@ -1,6 +1,7 @@
 from typing import Dict, Tuple
 
 MODEL_CONFIGS = {
+    # OpenAI Models
     'gpt-4o': {
         'input_cost': 0.0025,  # $2.50 per 1M tokens
         'output_cost': 0.01,   # $10.00 per 1M tokens
@@ -35,6 +36,27 @@ MODEL_CONFIGS = {
         'input_cost': 0.003,
         'output_cost': 0.012,
         'context_window': 128000
+    },
+    # Anthropic Models
+    'claude-3-haiku': {
+        'input_cost': 0.00025,  # $0.25 per 1M tokens
+        'output_cost': 0.00125, # $1.25 per 1M tokens
+        'context_window': 200000
+    },
+    'claude-3-sonnet': {
+        'input_cost': 0.003,    # $3.00 per 1M tokens
+        'output_cost': 0.015,   # $15.00 per 1M tokens
+        'context_window': 200000
+    },
+    'claude-3-opus': {
+        'input_cost': 0.015,    # $15.00 per 1M tokens
+        'output_cost': 0.075,   # $75.00 per 1M tokens
+        'context_window': 200000
+    },
+    'claude-3.5-sonnet': {
+        'input_cost': 0.003,    # $3.00 per 1M tokens
+        'output_cost': 0.015,   # $15.00 per 1M tokens
+        'context_window': 200000
     }
 }
 

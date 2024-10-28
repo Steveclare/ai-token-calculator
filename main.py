@@ -5,6 +5,14 @@ from utils.token_counter import count_tokens, analyze_text_sections, get_token_d
 from utils.file_processors import process_file
 from utils.cost_calculator import calculate_costs, get_context_window_info, MODEL_CONFIGS
 
+def format_model_name(model: str) -> str:
+    """Format model name with context window and CPM information"""
+    config = MODEL_CONFIGS[model]
+    context_k = config['context_window'] // 1000
+    input_cpm = config['input_cost'] * 1000  # Convert to cost per million
+    output_cpm = config['output_cost'] * 1000  # Convert to cost per million
+    return f"{model} (Context: {context_k}K, CPM: ${input_cpm:.2f} / ${output_cpm:.2f})"
+
 def display_cost_analysis(token_count: int, selected_model: str):
     """Display cost analysis for the given token count and model"""
     costs = calculate_costs(token_count, selected_model)
@@ -49,13 +57,15 @@ def display_token_analysis(text: str, selected_model: str):
     
     # Token distribution chart
     st.subheader("Token Distribution")
-    dist_df = pd.DataFrame(distribution)
-    dist_df.columns = ['Category', 'Count']
+    dist_df = pd.DataFrame(distribution, columns=['Category', 'Count'])
+    
+    # Create the chart with explicit scale
     chart = alt.Chart(dist_df).mark_bar().encode(
         x=alt.X('Category:N', sort='-y'),
-        y='Count:Q',
+        y=alt.Y('Count:Q', scale=alt.Scale(zero=True)),  # Ensure scale starts at zero
         color=alt.value("#FF4B4B")
     ).properties(height=200)
+    
     st.altair_chart(chart, use_container_width=True)
 
 def main():
@@ -98,11 +108,17 @@ def main():
     """)
     
     # Model selection
-    selected_model = st.selectbox(
-        "Select AI Model",
-        options=list(MODEL_CONFIGS.keys()),
-        format_func=lambda x: f"{x} (Context: {MODEL_CONFIGS[x]['context_window']:,} tokens)"
-    )
+    col1, col2 = st.columns(2)
+    with col1:
+        openai_models = [m for m in MODEL_CONFIGS.keys() if m.startswith(('gpt-', 'o1-'))]
+        selected_openai = st.selectbox("OpenAI Models", options=openai_models, format_func=format_model_name)
+
+    with col2:
+        anthropic_models = [m for m in MODEL_CONFIGS.keys() if m.startswith('claude-')]
+        selected_anthropic = st.selectbox("Anthropic Models", options=anthropic_models, format_func=format_model_name)
+
+    # Use the selected model from either dropdown
+    selected_model = selected_anthropic if selected_anthropic else selected_openai
     
     # Create tabs for different input methods
     tab1, tab2 = st.tabs(["📝 Text Input", "📁 File Upload"])
