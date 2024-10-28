@@ -77,11 +77,11 @@ def calculate_costs(token_count: int, model: str = 'gpt-4o') -> Dict[str, float]
     config = MODEL_CONFIGS[model]
     tokens_in_thousands = token_count / 1000
     
-    # Calculate different scenarios
+    # Calculate different scenarios with sum for input/output equal
     costs = {
         'input_only': round(tokens_in_thousands * config['input_cost'], 4),
         'output_only': round(tokens_in_thousands * config['output_cost'], 4),
-        'input_output_equal': round(tokens_in_thousands * (config['input_cost'] + config['output_cost']) / 2, 4),
+        'input_output_equal': round(tokens_in_thousands * (config['input_cost'] + config['output_cost']), 4)
     }
     
     return costs

@@ -18,17 +18,22 @@ def display_cost_analysis(token_count: int, selected_model: str):
     costs = calculate_costs(token_count, selected_model)
     context_window, fits_context = get_context_window_info(token_count, selected_model)
     
-    # Display context window info
-    st.info(
-        f"Context Window: {context_window:,} tokens\n\n" +
-        ("✅ Text fits within context window" if fits_context else "⚠️ Text exceeds context window")
+    # Display context window info with improved styling
+    st.markdown(
+        f"""
+        <div class="context-info {'context-warning' if not fits_context else ''}">
+            <h4>Context Window: {context_window:,} tokens</h4>
+            <p>{'✅ Text fits within context window' if fits_context else '⚠️ Text exceeds context window'}</p>
+        </div>
+        """,
+        unsafe_allow_html=True
     )
     
     # Create cost breakdown table
     cost_df = pd.DataFrame([
         {"Scenario": "Input Only", "Cost ($)": costs['input_only']},
         {"Scenario": "Output Only", "Cost ($)": costs['output_only']},
-        {"Scenario": "Equal Input/Output", "Cost ($)": costs['input_output_equal']}
+        {"Scenario": "Input + Output", "Cost ($)": costs['input_output_equal']}
     ])
     
     st.subheader("Estimated Costs")
@@ -41,11 +46,11 @@ def display_cost_analysis(token_count: int, selected_model: str):
     )
 
 def display_token_analysis(text: str, selected_model: str):
-    """Display simplified token analysis for the given text"""
+    """Display token analysis with improved styling"""
     analysis = analyze_text_sections(text, selected_model)
     distribution = get_token_distribution(text, selected_model)
     
-    # Display total statistics
+    # Display total statistics with modern styling
     col1, col2 = st.columns(2)
     with col1:
         st.metric("Total Tokens", f"{analysis['total_tokens']:,}")
@@ -76,26 +81,75 @@ def main():
         layout="centered"
     )
     
-    # Custom CSS
+    # Custom CSS with modern styling
     st.markdown("""
         <style>
-        .stTextArea textarea {
-            font-size: 16px;
+        .stApp {
+            background: linear-gradient(135deg, #f5f7fa 0%, #e4e8eb 100%);
+        }
+        .main {
+            padding: 2rem;
         }
         .token-count {
+            background: white;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            transition: transform 0.2s;
             font-size: 24px;
             font-weight: bold;
             padding: 20px;
             border-radius: 10px;
-            background-color: #f0f2f6;
             text-align: center;
+            margin: 1rem 0;
+        }
+        .token-count:hover {
+            transform: translateY(-2px);
+        }
+        .stDataFrame {
+            background: white;
+            border-radius: 10px;
+            padding: 1rem;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+            margin: 1rem 0;
+        }
+        .stMetric {
+            background: white;
+            padding: 1rem;
+            border-radius: 10px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+            transition: transform 0.2s;
+        }
+        .stMetric:hover {
+            transform: translateY(-2px);
+        }
+        .context-info {
+            background: white;
+            padding: 1rem;
+            border-radius: 10px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+            margin: 1rem 0;
+            text-align: center;
+        }
+        .context-warning {
+            border-left: 4px solid #ff4b4b;
+        }
+        .stTextArea textarea {
+            font-size: 16px;
+            border-radius: 10px;
+            border: 1px solid #e0e0e0;
+            padding: 1rem;
+            transition: border-color 0.2s;
+        }
+        .stTextArea textarea:focus {
+            border-color: #ff4b4b;
+            box-shadow: 0 0 0 2px rgba(255, 75, 75, 0.1);
         }
         .file-summary {
             font-size: 16px;
-            padding: 10px;
-            border-radius: 5px;
-            background-color: #f8f9fa;
-            margin: 5px 0;
+            padding: 1rem;
+            border-radius: 10px;
+            background-color: white;
+            margin: 0.5rem 0;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
         }
         </style>
     """, unsafe_allow_html=True)
@@ -108,12 +162,11 @@ def main():
     """)
     
     # Model selection
-    col1, col2 = st.columns([1, 3])  # Make first column shorter
+    col1, col2 = st.columns([1, 3])
     with col1:
         company = st.selectbox("Company", ["OpenAI", "Anthropic"])
 
     with col2:
-        # Filter models based on company selection
         available_models = [
             m for m in MODEL_CONFIGS.keys() 
             if (company == "OpenAI" and m.startswith(('gpt-', 'o1-'))) or 
@@ -125,7 +178,6 @@ def main():
     tab1, tab2 = st.tabs(["📝 Text Input", "📁 File Upload"])
     
     with tab1:
-        # Text input area
         text_input = st.text_area(
             "Enter your text here:",
             height=200,
@@ -134,12 +186,12 @@ def main():
         
         if text_input:
             try:
-                display_token_analysis(text_input, selected_model)
+                with st.spinner('Analyzing text...'):
+                    display_token_analysis(text_input, selected_model)
             except Exception as e:
                 st.error(f"Error analyzing text: {str(e)}")
     
     with tab2:
-        # Multiple file upload
         uploaded_files = st.file_uploader(
             "Choose files",
             type=['txt', 'pdf', 'docx', 'csv', 'xlsx', 'rtf', 'epub', 'json', 'yaml', 'yml'],
@@ -154,7 +206,6 @@ def main():
             with st.spinner('Processing files...'):
                 for uploaded_file in uploaded_files:
                     try:
-                        # Process each file
                         text_content = process_file(uploaded_file)
                         analysis = analyze_text_sections(text_content, selected_model)
                         total_tokens += analysis['total_tokens']
@@ -172,17 +223,14 @@ def main():
                         st.error(f"Error processing {uploaded_file.name}: {str(e)}")
                 
                 if file_results:
-                    # Display total token count and cost analysis
                     st.markdown(f"""
                         <div class="token-count">
                             Total Tokens: {total_tokens:,}
                         </div>
                     """, unsafe_allow_html=True)
                     
-                    # Display cost analysis for total tokens
                     display_cost_analysis(total_tokens, selected_model)
                     
-                    # Create a DataFrame for file summary
                     summary_df = pd.DataFrame([{
                         'File Name': result['File Name'],
                         'File Type': result['File Type'],
@@ -191,7 +239,6 @@ def main():
                         'Paragraphs': result['Paragraphs']
                     } for result in file_results])
                     
-                    # Display file summary
                     st.subheader("File Summary")
                     st.dataframe(
                         summary_df,
@@ -205,7 +252,7 @@ def main():
     # Footer
     st.markdown("---")
     st.markdown("""
-        <div style='text-align: center; color: #666;'>
+        <div style='text-align: center; color: #666; margin-top: 2rem;'>
             Made with ❤️ using Streamlit
         </div>
     """, unsafe_allow_html=True)
