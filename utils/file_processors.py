@@ -41,6 +41,14 @@ def process_csv(file_content: bytes) -> str:
     except Exception as e:
         raise Exception(f"Error processing CSV: {str(e)}")
 
+def process_xlsx(file_content: bytes) -> str:
+    """Process XLSX files."""
+    try:
+        df = pd.read_excel(BytesIO(file_content))
+        return df.to_string()
+    except Exception as e:
+        raise Exception(f"Error processing XLSX: {str(e)}")
+
 def process_rtf(file_content: bytes) -> str:
     """Process RTF files."""
     try:
@@ -98,6 +106,7 @@ def process_file(uploaded_file) -> str:
         'application/pdf': process_pdf,
         'application/vnd.openxmlformats-officedocument.wordprocessingml.document': process_docx,
         'text/csv': process_csv,
+        'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet': process_xlsx,
         'application/rtf': process_rtf,
         'application/epub+zip': process_epub,
         'application/json': process_json,
