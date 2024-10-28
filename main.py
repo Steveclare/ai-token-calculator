@@ -50,15 +50,15 @@ def display_token_analysis(text: str, selected_model: str):
     analysis = analyze_text_sections(text, selected_model)
     distribution = get_token_distribution(text, selected_model)
     
+    # Display cost analysis first
+    display_cost_analysis(analysis['total_tokens'], selected_model)
+    
     # Display total statistics with modern styling
     col1, col2 = st.columns(2)
     with col1:
         st.metric("Total Tokens", f"{analysis['total_tokens']:,}")
     with col2:
         st.metric("Total Paragraphs", analysis['total_paragraphs'])
-    
-    # Display cost analysis
-    display_cost_analysis(analysis['total_tokens'], selected_model)
     
     # Token distribution chart
     st.subheader("Token Distribution")
